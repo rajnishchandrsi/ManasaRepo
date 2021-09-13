@@ -1,0 +1,27 @@
+syntax = "proto3";
+option go_package = "./generated";
+
+import "validator.proto";
+
+message SearchRequest {
+
+  string id = 1 [(validator.field) = {alpha: true}];
+  string number = 2 [(validator.field) = {alpha: false}];
+
+}
+
+/** SearchResponse represents the response of the Search
+*/
+message SearchResponse{
+  string search_response = 1; // the search response
+  int32 page_number = 2; // the page number
+  int32 total_pages = 3; //total number of pages
+
+}
+
+/** This is a test search service
+*/
+service SearchService {
+  // Method to Search a test service
+  rpc Search (SearchRequest) returns (SearchResponse) {}
+}
