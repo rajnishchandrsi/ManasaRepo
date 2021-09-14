@@ -44,7 +44,8 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test/validator")
+	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test")
+	fmt.Fprintf(os.Stderr, "Maanasa")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
