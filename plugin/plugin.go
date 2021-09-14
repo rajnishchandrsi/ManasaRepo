@@ -10,7 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	validator "github.com/maanasasubrahmanyam-sd/test/validator"
+	validator "github.com/maanasasubrahmanyam-sd/test"
 )
 
 const alphaPattern = "^[a-zA-Z]+$"

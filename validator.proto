@@ -5,11 +5,11 @@ package validator;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "./validator";
+option go_package = "github.com/maanasasubrahmanyam-sd/test;validator";
 
 
 extend google.protobuf.FieldOptions {
-  optional FieldValidator field = 65021;
+  optional FieldValidator field = 65020;
 }
 
 message FieldValidator {
