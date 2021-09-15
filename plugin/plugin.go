@@ -61,12 +61,9 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 }
 
 func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
-	fmt.Fprintf(os.Stderr, " Maana inside getFieldValidatorIfAny ")
 	if field.Options != nil {
 		v, err := proto.GetExtension(field.Options, validator.E_Field)
-		fmt.Fprintf(os.Stderr, " getFieldValidatorIfAny 1", v)
 		if err == nil && v.(*validator.FieldValidator) != nil {
-			fmt.Fprintf(os.Stderr, " getFieldValidatorIfAny 2")
 			return (v.(*validator.FieldValidator))
 		}
 	}
@@ -107,10 +104,9 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
 
+	fmt.Fprintf(os.Stderr, "field ", message.Field)
 	for _, field := range message.Field {
-		fmt.Fprintf(os.Stderr, "inside for ")
 		fieldValidator := getFieldValidatorIfAny(field)
-		fmt.Fprintf(os.Stderr, "fieldValidator is ", fieldValidator)
 		if fieldValidator == nil && !field.IsMessage() {
 			fmt.Fprintf(os.Stderr, "fieldValidator nil ")
 			continue
