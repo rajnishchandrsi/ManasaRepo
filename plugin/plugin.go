@@ -55,8 +55,6 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 		}
 		p.generateRegexVars(file, msg)
 		if gogoproto.IsProto3(file.FileDescriptorProto) {
-			fmt.Fprintf(os.Stderr, "in gen 3 going")
-
 			p.generateProto3Message(file, msg)
 		} /*else {
 			p.generateProto2Message(file, msg)
@@ -110,13 +108,20 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.In()
 
 	for _, field := range message.Field {
+		fmt.Fprintf(os.Stderr, "inside for ")
 		fieldValidator := getFieldValidatorIfAny(field)
+
 		if fieldValidator == nil && !field.IsMessage() {
 			continue
 		}
 		isOneOf := field.OneofIndex != nil
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
+		fmt.Fprintf(os.Stderr, " going inside stringval")
+		if field.IsString() {
+			fmt.Fprintf(os.Stderr, " going inside stringval 1")
+			p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		}
 		//repeated := field.IsRepeated()
 		// Golang's proto3 has no concept of unset primitive fields
 		//nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage() && !(p.useGogoImport && gogoproto.IsEmbed(field))
@@ -132,12 +137,13 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.P(`if oneOfNester, ok := this.Get` + oneOfName + `().(* ` + oneOfType + `); ok {`)
 			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
 		}
-		fmt.Fprintf(os.Stderr, " going inside stringval")
+		/*fmt.Fprintf(os.Stderr, " going inside stringval")
 		if field.IsString() {
 			fmt.Fprintf(os.Stderr, " going inside stringval 1")
 			p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		}
+		}*/
 	}
+	fmt.Fprintf(os.Stderr, "outside for ")
 	p.P(`return nil`)
 	p.Out()
 	p.P(`}`)
