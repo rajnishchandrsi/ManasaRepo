@@ -131,13 +131,13 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 				}
 			} else if validator.Regex != nil {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
-			} else if validator.Alpha == nil {
+			} /*else if validator.Alpha == nil {
 				fmt.Fprintf(os.Stderr, "WARNING: regex and uuid validator is set for field %v.%v, is null.", ccTypeName, fieldName)
 			} else if validator.Alpha != nil && *validator.Alpha {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
 			}else{
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", defaultPattern, "`", `)`)
-			}
+			}*/
 		}
 	}
 }
@@ -248,6 +248,7 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 }
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
+
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
@@ -305,6 +306,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			}
 		}
 		if field.IsString() {
+			fmt.Fprintf(os.Stderr, "in string val")
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedInt(field) {
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
@@ -535,9 +537,10 @@ func (p *plugin) generateAlphaValidator(variableName string, ccTypeName string, 
 }
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Alpha != nil {
+	/*if fv.Alpha != nil {
 		p.generateAlphaValidator(variableName, ccTypeName, fieldName, fv)
-	}
+	}*/
+	fmt.Fprintf(os.Stderr, "inside string val**")
 	if fv.Regex != nil || fv.UuidVer != nil {
 		if fv.UuidVer != nil {
 			uuid, err := getUUIDRegex(fv.UuidVer)
