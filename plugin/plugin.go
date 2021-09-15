@@ -55,18 +55,22 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
 	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test")
-
+	fmt.Fprintf(os.Stderr, "import formed" )
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
 			continue
 		}
 		p.generateRegexVars(file, msg)
 		if gogoproto.IsProto3(file.FileDescriptorProto) {
+			fmt.Fprintf(os.Stderr, "calling 3" )
 			p.generateProto3Message(file, msg)
 		} else {
+			fmt.Fprintf(os.Stderr, "calling 2" )
 			p.generateProto2Message(file, msg)
 		}
 	}
+	fmt.Fprintf(os.Stderr, "call end" )
+
 }
 
 func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
@@ -248,6 +252,7 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 }
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
+	fmt.Fprintf(os.Stderr, "start of generateProto3Message")
 
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
@@ -305,6 +310,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.max_elts has no effects\n", ccTypeName, fieldName)
 			}
 		}
+		fmt.Fprintf(os.Stderr, "outside string val")
 		if field.IsString() {
 			fmt.Fprintf(os.Stderr, "in string val")
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
