@@ -42,8 +42,6 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	/*if !p.useGogoImport {
 		vanity.TurnOffGogoImport(file.FileDescriptorProto)
 	}*/
-	fmt.Fprintf(os.Stderr, "plugin start")
-
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
@@ -63,9 +61,12 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 }
 
 func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
+	fmt.Fprintf(os.Stderr, " Maana inside getFieldValidatorIfAny ")
 	if field.Options != nil {
 		v, err := proto.GetExtension(field.Options, validator.E_Field)
+		fmt.Fprintf(os.Stderr, " getFieldValidatorIfAny 1", v)
 		if err == nil && v.(*validator.FieldValidator) != nil {
+			fmt.Fprintf(os.Stderr, " getFieldValidatorIfAny 2")
 			return (v.(*validator.FieldValidator))
 		}
 	}
@@ -102,7 +103,6 @@ func (p *plugin) GetFieldName(message *generator.Descriptor, field *descriptor.F
 }
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
-	fmt.Fprintf(os.Stderr, "inside generateProto3Message")
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
@@ -110,8 +110,9 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	for _, field := range message.Field {
 		fmt.Fprintf(os.Stderr, "inside for ")
 		fieldValidator := getFieldValidatorIfAny(field)
-
+		fmt.Fprintf(os.Stderr, "fieldValidator is ", fieldValidator)
 		if fieldValidator == nil && !field.IsMessage() {
+			fmt.Fprintf(os.Stderr, "fieldValidator nil ")
 			continue
 		}
 		isOneOf := field.OneofIndex != nil
@@ -143,7 +144,6 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}*/
 	}
-	fmt.Fprintf(os.Stderr, "outside for ")
 	p.P(`return nil`)
 	p.Out()
 	p.P(`}`)
