@@ -1,9 +1,7 @@
-// Copyright 2016 Michal Witkowski. All Rights Reserved.
-// See LICENSE for licensing terms.
-
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -15,6 +13,7 @@ import (
 )
 
 func main() {
+	fmt.Fprintf(os.Stderr, "In Main")
 	gen := generator.New()
 
 	data, err := ioutil.ReadAll(os.Stdin)
