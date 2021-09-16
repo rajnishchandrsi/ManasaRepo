@@ -3,14 +3,14 @@ package plugin
 import (
 	"fmt"
 	"os"
-	//"strconv"
+	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
-	//"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	//validator "github.com/maanasasubrahmanyam-sd/test"
+	validator "github.com/maanasasubrahmanyam-sd/test"
 )
 
 const alphaPattern = "^[a-zA-Z]+$"
@@ -51,9 +51,8 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
 			continue
 		}
-		//p.generateRegexVars(file, msg)
+		p.generateRegexVars(file, msg)
 		if gogoproto.IsProto3(file.FileDescriptorProto) {
-			fmt.Fprintf(os.Stderr, "maanasa new ")
 			p.generateProto3Message(file, msg)
 		} /*else {
 			p.generateProto2Message(file, msg)
@@ -61,7 +60,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	}
 }
 
-/*func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
+func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
 	if field.Options != nil {
 		v, err := proto.GetExtension(field.Options, validator.E_Field)
 		if err == nil && v.(*validator.FieldValidator) != nil {
@@ -69,11 +68,10 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 		}
 	}
 	return nil
-}*/
+}
 
 
-
-/*func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
+func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
@@ -88,7 +86,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 			}
 		}
 	}
-}*/
+}
 
 func (p *plugin) GetFieldName(message *generator.Descriptor, field *descriptor.FieldDescriptorProto) string {
 	fieldName := p.Generator.GetFieldName(message, field)
@@ -106,23 +104,15 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
 
-	fmt.Fprintf(os.Stderr, "field ", message.Field)
-	/*for _, field := range message.Field {
+	fmt.Fprintf(os.Stderr, "Maana", message.Field )
+	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
-			fmt.Fprintf(os.Stderr, "fieldValidator nil ")
 			continue
 		}
 		isOneOf := field.OneofIndex != nil
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
-		fmt.Fprintf(os.Stderr, " going inside stringval")
-		if field.IsString() {
-			fmt.Fprintf(os.Stderr, " going inside stringval 1")
-			//p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
-			p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
-
-		}
 		//repeated := field.IsRepeated()
 		// Golang's proto3 has no concept of unset primitive fields
 		//nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage() && !(p.useGogoImport && gogoproto.IsEmbed(field))
@@ -138,20 +128,17 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.P(`if oneOfNester, ok := this.Get` + oneOfName + `().(* ` + oneOfType + `); ok {`)
 			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
 		}
-		/*fmt.Fprintf(os.Stderr, " going inside stringval")
 		if field.IsString() {
-			fmt.Fprintf(os.Stderr, " going inside stringval 1")
 			p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		}*/
-	//}*/
+		}
+	}
 	p.P(`return nil`)
 	p.Out()
 	p.P(`}`)
 }
 
 
-/*func (p *plugin) generateAlphaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	fmt.Fprintf(os.Stderr, "  inside generateAlphaValidator")
+func (p *plugin) generateAlphaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.Alpha != nil  {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
@@ -163,7 +150,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		p.Out()
 		p.P(`}`)
 	}
-}*/
+}
 
 
 func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
