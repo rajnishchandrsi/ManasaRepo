@@ -5,8 +5,8 @@ import "validator.proto";
 
 message SearchRequest {
 
-  string id = 1 [(validator.field) = {regex: "^[a-z]{2,5}$"}];
- // string number = 2 [(validator.field) = {alpha: false}];
+  //string id = 1 [(validator.field) = {regex: "^[a-z]{2,5}$"}];
+ string id = 2 [(validator.field) = {alpha: false}];
 
 }
 
