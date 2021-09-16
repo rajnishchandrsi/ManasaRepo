@@ -7,10 +7,9 @@ option go_package = "github.com/maanasasubrahmanyam-sd/test;validator";
 
 
 extend google.protobuf.FieldOptions {
-  optional bool alpha = 65020;
+  optional FieldValidator field = 65020;
 }
 
-/*
 message FieldValidator {
   optional bool alpha = 1;
-}*/
+}
