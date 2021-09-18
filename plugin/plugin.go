@@ -151,7 +151,7 @@ func (p *plugin) generateBetaValidator(variableName string, ccTypeName string, f
 	p.In()
 	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
 	if *fv.Beta {
-		errorStr = "be a string conforming to beta regex " + strconv.Quote(alphaPattern)
+		errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
 	}
 	p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`))")
 	p.Out()
