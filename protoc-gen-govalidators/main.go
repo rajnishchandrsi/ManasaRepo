@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -13,7 +12,6 @@ import (
 )
 
 func main() {
-	fmt.Fprintf(os.Stderr, "In Main **")
 	gen := generator.New()
 
 	data, err := ioutil.ReadAll(os.Stdin)
@@ -48,11 +46,7 @@ func main() {
 	gen.WrapTypes()
 	gen.SetPackageNames()
 	gen.BuildTypeNameMap()
-	fmt.Fprintf(os.Stderr, "In Main 1")
-
 	gen.GeneratePlugin(validator_plugin.NewPlugin(useGogoImport))
-	fmt.Fprintf(os.Stderr, "In Main end")
-
 
 	for i := 0; i < len(gen.Response.File); i++ {
 		gen.Response.File[i].Name = proto.String(strings.Replace(*gen.Response.File[i].Name, ".pb.go", ".validator.pb.go", -1))

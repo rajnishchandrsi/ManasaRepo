@@ -15,6 +15,7 @@ import (
 
 const alphaPattern = "^[a-zA-Z]+$"
 const defaultPattern = "^[a-zA-Z0-9]+$"
+const betaPattern = "^[a-zA-Z0-9]+$"
 
 
 type plugin struct {
@@ -39,9 +40,6 @@ func (p *plugin) Init(g *generator.Generator) {
 }
 
 func (p *plugin) Generate(file *generator.FileDescriptor) {
-	/*if !p.useGogoImport {
-		vanity.TurnOffGogoImport(file.FileDescriptorProto)
-	}*/
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
@@ -54,9 +52,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 		p.generateRegexVars(file, msg)
 		if gogoproto.IsProto3(file.FileDescriptorProto) {
 			p.generateProto3Message(file, msg)
-		} /*else {
-			p.generateProto2Message(file, msg)
-		}*/
+		}
 	}
 }
 
@@ -78,9 +74,13 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
 			if validator.Alpha == nil {
-				fmt.Fprintf(os.Stderr, "WARNING: regex and uuid validator is set for field %v.%v, is null.", ccTypeName, fieldName)
+				fmt.Fprintf(os.Stderr, "WARNING: regex alpha validator is set for field %v.%v, is null.", ccTypeName, fieldName)
 			} else if validator.Alpha != nil && *validator.Alpha {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
+			}else if validator.Beta == nil {
+				fmt.Fprintf(os.Stderr, "WARNING: regex beta validator is set for field %v.%v, is null.", ccTypeName, fieldName)
+			} else if validator.Beta != nil && *validator.Beta {
+				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", betaPattern, "`", `)`)
 			}else{
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", defaultPattern, "`", `)`)
 			}
@@ -104,7 +104,6 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
 
-	fmt.Fprintf(os.Stderr, "Maana", message.Field )
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
@@ -113,9 +112,6 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		isOneOf := field.OneofIndex != nil
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
-		//repeated := field.IsRepeated()
-		// Golang's proto3 has no concept of unset primitive fields
-		//nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage() && !(p.useGogoImport && gogoproto.IsEmbed(field))
 		if p.fieldIsProto3Map(file, message, field) {
 			p.P(`// Validation of proto3 map<> fields is unsupported.`)
 			continue
@@ -129,7 +125,13 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
 		}
 		if field.IsString() {
-			p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
+			if fieldValidator.Alpha != nil {
+				p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
+			}
+			if fieldValidator.Beta != nil {
+				p.generateBetaValidator(variableName, ccTypeName, fieldName, fieldValidator)
+			}
+
 		}
 	}
 	p.P(`return nil`)
@@ -139,7 +141,6 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 
 
 func (p *plugin) generateAlphaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Alpha != nil  {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
 		errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
@@ -149,9 +150,19 @@ func (p *plugin) generateAlphaValidator(variableName string, ccTypeName string, 
 		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`))")
 		p.Out()
 		p.P(`}`)
-	}
 }
 
+func (p *plugin) generateBetaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
+	p.In()
+	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
+	if *fv.Beta {
+		errorStr = "be a string conforming to beta regex " + strconv.Quote(alphaPattern)
+	}
+	p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`))")
+	p.Out()
+	p.P(`}`)
+}
 
 func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
 	if field.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE || !field.IsRepeated() {

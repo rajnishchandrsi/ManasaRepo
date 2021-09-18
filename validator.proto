@@ -12,4 +12,6 @@ extend google.protobuf.FieldOptions {
 
 message FieldValidator {
   optional bool alpha = 1;
+  optional bool beta = 2;
+
 }
