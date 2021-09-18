@@ -31,4 +31,15 @@ protoc \
 -I $GOPATH/pkg/mod/github.com/google/protobufv3.18.0+incompatible/src/ \
 --proto_path=. \
 --gogo_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. \
-validator.proto
+validator.
+//////////////////////////////////////////////////////////////////////
+
+final working command 
+
+protoc \
+--proto_path=. \
+--proto_path=${GOPATH}/pkg/mod \
+--proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2/protobuf \
+--gogo_out=${GOPATH}/src \
+--gogo_opt=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor \
+validator.proto 
