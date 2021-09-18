@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -73,13 +71,9 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
-			if validator.Alpha == nil {
-				fmt.Fprintf(os.Stderr, "WARNING: regex alpha validator is set for field %v.%v, is null.", ccTypeName, fieldName)
-			} else if validator.Alpha != nil && *validator.Alpha {
+			if validator.Alpha != nil && *validator.Alpha {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
-			}else if validator.Beta == nil {
-				fmt.Fprintf(os.Stderr, "WARNING: regex beta validator is set for field %v.%v, is null.", ccTypeName, fieldName)
-			} else if validator.Beta != nil && *validator.Beta {
+			}else if validator.Beta != nil && *validator.Beta {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", betaPattern, "`", `)`)
 			}else{
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", defaultPattern, "`", `)`)
