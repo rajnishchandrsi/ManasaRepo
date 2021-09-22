@@ -6,7 +6,7 @@ import "secvalidator.proto";
 message SearchRequest {
 
   //string id = 1 [(validator.field) = {regex: "^[a-z]{2,5}$"}];
- string id = 2 [(validator.field) = {alpha: false}];
+ string id = 2 [(secvalidator.field) = {alpha: false}];
 
 }
 

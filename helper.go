@@ -6,13 +6,13 @@ package secvalidator
 import "strings"
 
 // Validator is a general interface that allows a message to be validated.
-type SecValidator interface {
-	SecValidate() error
+type Validator interface {
+	Validate() error
 }
 
 func CallValidatorIfExists(candidate interface{}) error {
-	if validator, ok := candidate.(SecValidator); ok {
-		return validator.SecValidate()
+	if validator, ok := candidate.(Validator); ok {
+		return validator.Validate()
 	}
 	return nil
 }

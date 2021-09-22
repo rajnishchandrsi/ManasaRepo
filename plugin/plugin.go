@@ -30,7 +30,7 @@ func NewPlugin(useGogoImport bool) generator.Plugin {
 }
 
 func (p *plugin) Name() string {
-	return "secvalidator"
+	return "validator"
 }
 
 func (p *plugin) Init(g *generator.Generator) {
