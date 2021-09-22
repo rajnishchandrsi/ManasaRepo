@@ -94,7 +94,7 @@ func (p *plugin) GetFieldName(message *generator.Descriptor, field *descriptor.F
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
-	p.P(`func (this *`, ccTypeName, `) SecValidator() error {`)
+	p.P(`func (this *`, ccTypeName, `) Validator() error {`)
 	p.In()
 
 	for _, field := range message.Field {
