@@ -42,4 +42,4 @@ protoc \
 --proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2/protobuf \
 --gogo_out=${GOPATH}/src \
 --gogo_opt=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor \
-validator.proto 
+secvalidator.proto 

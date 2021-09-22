@@ -1,9 +1,9 @@
 syntax = "proto2";
-package validator;
+package secvalidator;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/maanasasubrahmanyam-sd/test;validator";
+option go_package = "github.com/maanasasubrahmanyam-sd/test;secvalidator";
 
 
 extend google.protobuf.FieldOptions {

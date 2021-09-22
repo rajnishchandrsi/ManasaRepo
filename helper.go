@@ -1,18 +1,18 @@
 // Copyright 2016 Michal Witkowski. All Rights Reserved.
 // See LICENSE for licensing terms.
 
-package validator
+package secvalidator
 
 import "strings"
 
 // Validator is a general interface that allows a message to be validated.
-type Validator interface {
-	Validate() error
+type SecValidator interface {
+	SecValidate() error
 }
 
 func CallValidatorIfExists(candidate interface{}) error {
-	if validator, ok := candidate.(Validator); ok {
-		return validator.Validate()
+	if validator, ok := candidate.(SecValidator); ok {
+		return validator.SecValidate()
 	}
 	return nil
 }

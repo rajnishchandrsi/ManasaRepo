@@ -30,7 +30,7 @@ func NewPlugin(useGogoImport bool) generator.Plugin {
 }
 
 func (p *plugin) Name() string {
-	return "validator"
+	return "secvalidator"
 }
 
 func (p *plugin) Init(g *generator.Generator) {
@@ -42,7 +42,6 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
 	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test")
-
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
 			continue
@@ -95,7 +94,7 @@ func (p *plugin) GetFieldName(message *generator.Descriptor, field *descriptor.F
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
-	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
+	p.P(`func (this *`, ccTypeName, `) SecValidator() error {`)
 	p.In()
 
 	for _, field := range message.Field {

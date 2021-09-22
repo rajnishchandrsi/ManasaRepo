@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -46,10 +47,11 @@ func main() {
 	gen.WrapTypes()
 	gen.SetPackageNames()
 	gen.BuildTypeNameMap()
+	fmt.Println("Maanasa")
 	gen.GeneratePlugin(validator_plugin.NewPlugin(useGogoImport))
 
 	for i := 0; i < len(gen.Response.File); i++ {
-		gen.Response.File[i].Name = proto.String(strings.Replace(*gen.Response.File[i].Name, ".pb.go", ".validator.pb.go", -1))
+		gen.Response.File[i].Name = proto.String(strings.Replace(*gen.Response.File[i].Name, ".pb.go", ".secvalidator.pb.go", -1))
 	}
 
 	// Send back the results.
