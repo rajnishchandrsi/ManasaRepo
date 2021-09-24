@@ -1,14 +1,13 @@
 package plugin
 
 import (
-	"strconv"
-	"strings"
-
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	validator "github.com/maanasasubrahmanyam-sd/test"
+	"strconv"
+	"strings"
 )
 
 const alphaPattern = "^[a-zA-Z]+$"
@@ -94,9 +93,9 @@ func (p *plugin) GetFieldName(message *generator.Descriptor, field *descriptor.F
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
-	p.P(`func (this *`, ccTypeName, `) Validator() error {`)
+	p.P(`func (this *`, ccTypeName, `) Secvalidator() error {`)
 	p.In()
-
+	p.P(`errorsList := []error{}`)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
@@ -124,25 +123,23 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			if fieldValidator.Beta != nil {
 				p.generateBetaValidator(variableName, ccTypeName, fieldName, fieldValidator)
 			}
-
 		}
 	}
-	p.P(`return nil`)
+	p.P(`return errorsList`)
 	p.Out()
 	p.P(`}`)
 }
 
-
 func (p *plugin) generateAlphaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
-		p.In()
-		errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
-		if *fv.Alpha {
-			errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
-		}
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`))")
-		p.Out()
-		p.P(`}`)
+	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
+	p.In()
+	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
+	if *fv.Alpha {
+		errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
+	}
+	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
+	p.Out()
+	p.P(`}`)
 }
 
 func (p *plugin) generateBetaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
@@ -152,7 +149,7 @@ func (p *plugin) generateBetaValidator(variableName string, ccTypeName string, f
 	if *fv.Beta {
 		errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
 	}
-	p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`))")
+	p.P(`errorsList = append(errorsList, `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
 	p.Out()
 	p.P(`}`)
 }
