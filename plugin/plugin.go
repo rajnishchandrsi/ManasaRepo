@@ -1,19 +1,19 @@
 package plugin
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	validator "github.com/maanasasubrahmanyam-sd/test"
-	"strconv"
-	"strings"
 )
 
 const alphaPattern = "^[a-zA-Z]+$"
 const defaultPattern = "^[a-zA-Z0-9]+$"
 const betaPattern = "^[a-zA-Z0-9]+$"
-
 
 type plugin struct {
 	*generator.Generator
@@ -62,7 +62,6 @@ func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.F
 	return nil
 }
 
-
 func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
@@ -71,9 +70,9 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 			fieldName := p.GetOneOfFieldName(message, field)
 			if validator.Alpha != nil && *validator.Alpha {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
-			}else if validator.Beta != nil && *validator.Beta {
+			} else if validator.Beta != nil && *validator.Beta {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", betaPattern, "`", `)`)
-			}else{
+			} else {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", defaultPattern, "`", `)`)
 			}
 		}
@@ -117,12 +116,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
 		}
 		if field.IsString() {
-			if fieldValidator.Alpha != nil {
-				p.generateAlphaValidator(variableName, ccTypeName, fieldName, fieldValidator)
-			}
-			if fieldValidator.Beta != nil {
-				p.generateBetaValidator(variableName, ccTypeName, fieldName, fieldValidator)
-			}
+			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 	}
 	p.P(`return errorsList`)
@@ -130,26 +124,16 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`}`)
 }
 
-func (p *plugin) generateAlphaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 	p.In()
 	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
-	if *fv.Alpha {
+	if fv.Alpha != nil && *fv.Alpha {
 		errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
-	}
-	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
-	p.Out()
-	p.P(`}`)
-}
-
-func (p *plugin) generateBetaValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
-	p.In()
-	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
-	if *fv.Beta {
+	} else if fv.Beta != nil && *fv.Beta {
 		errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
 	}
-	p.P(`errorsList = append(errorsList, `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
+	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
 	p.Out()
 	p.P(`}`)
 }

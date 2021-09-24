@@ -1,0 +1,19 @@
+// Copyright 2016 Michal Witkowski. All Rights Reserved.
+// See LICENSE for licensing terms.
+
+syntax = "proto3";
+package validatortest;
+
+//import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/maanasasubrahmanyam-sd/test/secvalidator.proto";
+
+
+message ValidatorMessage3 {
+	
+	//string SomeString = 1 [(validator.field) = {regex: "^.{2,5}$"}];
+	string alphaTrue = 1 [(secvalidator.field) = {alpha: true}];
+	string alphaFalse = 2 [(secvalidator.field) = {alpha: false}];
+    string betaTrue = 3 [(secvalidator.field) = {beta: true}];
+	string betaFalse = 4 [(secvalidator.field) = {beta: true}];
+
+}
