@@ -5,18 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7ff2fe73-20c7-4905-976d-3565cc3ba3fb" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.MD" beforeDir="false" afterPath="$PROJECT_DIR$/README.MD" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/helper.go" beforeDir="false" afterPath="$PROJECT_DIR$/helper.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/protoc-gen-govalidators/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/protoc-gen-govalidators/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/includes/deps.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/includes/deps.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/prepare-deps.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/prepare-deps.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/secvalidator.pb.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/secvalidator.proto" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.proto" beforeDir="false" afterPath="$PROJECT_DIR$/test.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,6 +71,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
