@@ -65,6 +65,7 @@ func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.F
 func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
+
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
