@@ -12,7 +12,7 @@ import (
 )
 
 const alphaPattern = "^[a-zA-Z]+$"
-const defaultPattern = "^[a-zA-Z0-9]+$"
+const defaultPattern = "^[a-z]+$"
 const betaPattern = "^[a-zA-Z0-9]+$"
 
 type plugin struct {
