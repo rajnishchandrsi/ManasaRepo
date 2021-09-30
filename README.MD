@@ -28,3 +28,16 @@ protoc \
 --gogo_opt=Mgo-proto-validators/validator.proto=github.com/maanasasubrahmanyam-sd \
 --govalidators_out=./ \
 validator_proto3.proto
+
+
+protoc \
+--proto_path=. \
+--proto_path=${GOPATH}/pkg/mod \
+--proto_path=${GOPATH}/src \
+--proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2/protobuf \
+--gogo_out=./gogo \
+--gogo_out=${GOPATH}/src \
+--gogo_opt=Mgogoproto/gogo.proto=github.com/gogo/protobuf@v1.3.2 \
+--gogo_opt=Mgo-proto-validators/validator.proto=github.com/maanasasubrahmanyam-sd \
+--govalidators_out=./gogo \
+validator_proto3.proto
