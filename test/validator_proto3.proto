@@ -13,6 +13,6 @@ message ValidatorMessage3 {
 	//string SomeString = 1 [(validator.field) = {regex: "^.{2,5}$"}];
 	string alphaTrue = 1 [(secvalidator.field) = {alpha: true}];
 	string alphaFalse = 2 [(secvalidator.field) = {alpha: false}];
-    
+    string noval = 3;
 
 }
