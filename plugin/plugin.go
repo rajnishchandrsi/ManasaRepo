@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -68,10 +70,15 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
-			if validator.Alpha != nil && *validator.Alpha {
-				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
-			} else if validator.Beta != nil && *validator.Beta {
-				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", betaPattern, "`", `)`)
+			if validator.Alpha != nil {
+				if *validator.Alpha == true {
+					p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
+				}
+			}
+			if validator.Beta != nil {
+				if *validator.Beta == true {
+					p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", betaPattern, "`", `)`)
+				}
 			} else {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", defaultPattern, "`", `)`)
 			}
@@ -95,6 +102,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`func (this *`, ccTypeName, `) Secvalidator() []error {`)
 	p.In()
 	p.P(`errorsList := []error{}`)
+	fmt.Fprintf(os.Stderr, "Maanasa", message.Field)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
@@ -103,6 +111,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		isOneOf := field.OneofIndex != nil
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
+
 		if p.fieldIsProto3Map(file, message, field) {
 			p.P(`// Validation of proto3 map<> fields is unsupported.`)
 			continue
@@ -124,14 +133,16 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`}`)
 }
 
+// show user input value
+
 func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 	p.In()
-	errorStr := fieldName + "be a string conforming to default regex " + strconv.Quote(defaultPattern)
+	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
 	if fv.Alpha != nil && *fv.Alpha {
-		errorStr = "ccTypeName: " + ccTypeName + "variable:" + variableName + "filed:" + fieldName + "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
+		errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
 	} else if fv.Beta != nil && *fv.Beta {
-		errorStr = fieldName + "be a string conforming to beta regex " + strconv.Quote(betaPattern)
+		errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
 	}
 	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
 	p.Out()
@@ -155,5 +166,6 @@ func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *gener
 }
 
 func (p *plugin) regexName(ccTypeName string, fieldName string) string {
+	fmt.Fprintf(os.Stderr, "maana_regex_"+ccTypeName+"_"+fieldName)
 	return "_regex_" + ccTypeName + "_" + fieldName
 }
