@@ -1,8 +1,9 @@
 package plugin
 
 import (
+	"fmt"
+	"os"
 	"strconv"
-	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
@@ -101,27 +102,18 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
+			fmt.Fprintln(os.Stderr, "field val empty")
 			continue
 		}
-		isOneOf := field.OneofIndex != nil
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
-		if p.fieldIsProto3Map(file, message, field) {
-			p.P(`// Validation of proto3 map<> fields is unsupported.`)
-			continue
-		}
-		if isOneOf {
-			p.In()
-			oneOfName := p.GetFieldName(message, field)
-			oneOfType := p.OneOfTypeName(message, field)
-			// if x, ok := m.GetType().(*OneOfMessage3_OneInt); ok {
-			p.P(`if oneOfNester, ok := this.Get` + oneOfName + `().(* ` + oneOfType + `); ok {`)
-			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
-		}
+
 		if field.IsString() {
+			fmt.Fprintln(os.Stderr, variableName, ccTypeName, fieldName, fieldValidator)
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 		if field.IsMessage() {
+			fmt.Fprintln(os.Stderr, " in default ")
 			p.generateDefaultValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 	}
@@ -153,22 +145,6 @@ func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string
 	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
 	p.Out()
 	p.P(`}`)
-}
-
-func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
-	if field.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE || !field.IsRepeated() {
-		return false
-	}
-	typeName := field.GetTypeName()
-	var msg *descriptor.DescriptorProto
-	if strings.HasPrefix(typeName, ".") {
-		// Fully qualified case, look up in global map, must work or fail badly.
-		msg = p.ObjectNamed(field.GetTypeName()).(*generator.Descriptor).DescriptorProto
-	} else {
-		// Nested, relative case.
-		msg = file.GetNestedMessage(message.DescriptorProto, field.GetTypeName())
-	}
-	return msg.GetOptions().GetMapEntry()
 }
 
 func (p *plugin) regexName(ccTypeName string, fieldName string) string {
