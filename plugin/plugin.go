@@ -120,17 +120,19 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`}`)
 }
 
+//code
 func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if (fv.Alpha != nil && *fv.Alpha) || (fv.Beta != nil && *fv.Beta) {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
 		errorStr := ""
+
 		if fv.Alpha != nil && *fv.Alpha {
 			errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
 		} else if fv.Beta != nil && *fv.Beta {
 			errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
 		}
-		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
+		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(this."+fieldName+"+`", errorStr, "`)))")
 		p.Out()
 		p.P(`}`)
 	}
