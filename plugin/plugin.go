@@ -12,7 +12,7 @@ import (
 )
 
 const alphaPattern = "^[a-zA-Z]+$"
-const defaultPattern = "^[a-z]+$"
+const defaultPattern = "^[a-zA-Z0-9]+$"
 const betaPattern = "^[a-zA-Z0-9]+$"
 
 type plugin struct {
@@ -65,16 +65,17 @@ func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.F
 func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
-
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
-			if validator.Alpha != nil && *validator.Alpha == true {
+			if validator.Alpha != nil && *validator.Alpha {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
-			} else if validator.Beta != nil && *validator.Beta == true {
+			} else if validator.Beta != nil && *validator.Beta {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", betaPattern, "`", `)`)
-			} // new code
-		} else if validator == nil && field.IsMessage() {
+			} else {
+				// no validation
+			}
+		} else {
 			fieldName := p.GetOneOfFieldName(message, field)
 			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", defaultPattern, "`", `)`)
 		}
@@ -99,24 +100,12 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`errorsList := []error{}`)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
-		// new code
-		if fieldValidator == nil && field.IsMessage() {
-			fieldName := p.GetOneOfFieldName(message, field)
-			variableName := "this." + fieldName
-			p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
-			p.In()
-			errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
-			p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
-			p.Out()
-			p.P(`}`)
-		}
-		if !field.IsMessage() && fieldValidator == nil {
+		if fieldValidator == nil && !field.IsMessage() {
 			continue
 		}
 		isOneOf := field.OneofIndex != nil
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
-
 		if p.fieldIsProto3Map(file, message, field) {
 			p.P(`// Validation of proto3 map<> fields is unsupported.`)
 			continue
@@ -137,8 +126,6 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.Out()
 	p.P(`}`)
 }
-
-// show user input value
 
 func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
