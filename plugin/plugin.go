@@ -101,21 +101,19 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`errorsList := []error{}`)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
-		if fieldValidator == nil && !field.IsMessage() {
-			fmt.Fprintln(os.Stderr, "field val empty")
-			continue
-		}
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
+
+		if fieldValidator == nil && !field.IsMessage() {
+			p.generateDefaultValidator(variableName, ccTypeName, fieldName)
+			continue
+		}
 
 		if field.IsString() {
 			fmt.Fprintln(os.Stderr, variableName, ccTypeName, fieldName, fieldValidator)
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
-		if field.IsMessage() {
-			fmt.Fprintln(os.Stderr, " in default ")
-			p.generateDefaultValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		}
+
 	}
 	p.P(`return errorsList`)
 	p.Out()
@@ -138,7 +136,7 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 	}
 }
 
-func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string, fieldName string) {
 	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 	p.In()
 	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
