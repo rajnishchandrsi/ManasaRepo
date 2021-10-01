@@ -12,7 +12,7 @@ import (
 )
 
 const alphaPattern = "^[a-zA-Z]+$"
-const defaultPattern = "^[a-zA-Z0-9]+$"
+const defaultPattern = "^[a-z]+$"
 const betaPattern = "^[a-zA-Z0-9]+$"
 
 type plugin struct {
@@ -121,6 +121,9 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		if field.IsString() {
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
+		if field.IsMessage() {
+			p.generateDefaultValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		}
 	}
 	p.P(`return errorsList`)
 	p.Out()
@@ -128,14 +131,25 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 }
 
 func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	if (fv.Alpha != nil && *fv.Alpha) || (fv.Beta != nil && *fv.Beta) {
+		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
+		p.In()
+		errorStr := ""
+		if fv.Alpha != nil && *fv.Alpha {
+			errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
+		} else if fv.Beta != nil && *fv.Beta {
+			errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
+		}
+		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
+		p.Out()
+		p.P(`}`)
+	}
+}
+
+func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 	p.In()
 	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
-	if fv.Alpha != nil && *fv.Alpha {
-		errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
-	} else if fv.Beta != nil && *fv.Beta {
-		errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
-	}
 	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
 	p.Out()
 	p.P(`}`)
