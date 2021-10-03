@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
@@ -12,8 +13,8 @@ import (
 	validator "github.com/maanasasubrahmanyam-sd/test"
 )
 
-const alphaPattern = "^[a-zA-Z]+$"
-const defaultPattern = "^[a-z]+$"
+const alphaPattern = "^[a-zA-Z`'\"]+$"
+const defaultPattern = "^[a-z']+$"
 const betaPattern = "^[a-zA-Z0-9]+$"
 
 type plugin struct {
@@ -132,7 +133,8 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 		} else if fv.Beta != nil && *fv.Beta {
 			errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
 		}
-		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(this."+fieldName+"+`", errorStr, "`)))")
+		errorStr = strings.Replace(errorStr, `"`, `/"`, -1)
+		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf(this.`+fieldName+`+" `, errorStr, `")))`)
 		p.Out()
 		p.P(`}`)
 	}
@@ -142,7 +144,7 @@ func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string
 	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 	p.In()
 	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
-	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", errorStr, "`)))")
+	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(this."+fieldName+"+` ", errorStr, "`)))")
 	p.Out()
 	p.P(`}`)
 }
