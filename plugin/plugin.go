@@ -3,7 +3,6 @@ package plugin
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
@@ -71,15 +70,18 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
 			if validator.Alpha != nil && *validator.Alpha {
-				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", alphaPattern, "`", `)`)
+				alphaPatternStr := strings.Replace(alphaPattern, `"`, `/"`, -1)
+				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", alphaPatternStr, "\"", `)`)
 			} else if validator.Beta != nil && *validator.Beta {
-				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", betaPattern, "`", `)`)
+				betaPatternStr := strings.Replace(betaPattern, `"`, `/"`, -1)
+				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", betaPatternStr, "\"", `)`)
 			} else {
 				// no validation
 			}
 		} else {
 			fieldName := p.GetOneOfFieldName(message, field)
-			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", defaultPattern, "`", `)`)
+			defaultPatternStr := strings.Replace(defaultPattern, `"`, `/"`, -1)
+			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPatternStr, "\"", `)`)
 		}
 	}
 }
@@ -133,7 +135,7 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 		} else if fv.Beta != nil && *fv.Beta {
 			errorStr = "be a string conforming to beta regex " + betaPattern
 		}
-		errorStr = strings.Replace(errorStr, `"`, `/"`, -1)
+		errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
 		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf(this.`+fieldName+`+" `, errorStr, `")))`)
 		p.Out()
 		p.P(`}`)
@@ -143,8 +145,9 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string, fieldName string) {
 	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 	p.In()
-	errorStr := "be a string conforming to default regex " + strconv.Quote(defaultPattern)
-	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(this."+fieldName+"+` ", errorStr, "`)))")
+	errorStr := "be a string conforming to default regex " + defaultPattern
+	errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
+	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf(this.`+fieldName+`+" `, errorStr, `")))`)
 	p.Out()
 	p.P(`}`)
 }
