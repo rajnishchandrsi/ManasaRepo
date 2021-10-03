@@ -129,9 +129,9 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 		errorStr := ""
 
 		if fv.Alpha != nil && *fv.Alpha {
-			errorStr = "be a string conforming to alpha regex " + strconv.Quote(alphaPattern)
+			errorStr = "be a string conforming to alpha regex " + alphaPattern
 		} else if fv.Beta != nil && *fv.Beta {
-			errorStr = "be a string conforming to beta regex " + strconv.Quote(betaPattern)
+			errorStr = "be a string conforming to beta regex " + betaPattern
 		}
 		errorStr = strings.Replace(errorStr, `"`, `/"`, -1)
 		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf(this.`+fieldName+`+" `, errorStr, `")))`)
