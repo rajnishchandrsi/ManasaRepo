@@ -70,17 +70,17 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
 			if validator.Alpha != nil && *validator.Alpha {
-				alphaPatternStr := strings.Replace(alphaPattern, `"`, `/"`, -1)
+				alphaPatternStr := strings.Replace(alphaPattern, `"`, `\"`, -1)
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", alphaPatternStr, "\"", `)`)
 			} else if validator.Beta != nil && *validator.Beta {
-				betaPatternStr := strings.Replace(betaPattern, `"`, `/"`, -1)
+				betaPatternStr := strings.Replace(betaPattern, `"`, `\"`, -1)
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", betaPatternStr, "\"", `)`)
 			} else {
 				// no validation
 			}
 		} else {
 			fieldName := p.GetOneOfFieldName(message, field)
-			defaultPatternStr := strings.Replace(defaultPattern, `"`, `/"`, -1)
+			defaultPatternStr := strings.Replace(defaultPattern, `"`, `\"`, -1)
 			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPatternStr, "\"", `)`)
 		}
 	}
