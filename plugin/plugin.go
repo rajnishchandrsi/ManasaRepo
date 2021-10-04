@@ -70,7 +70,9 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
 			if validator.Alpha != nil && *validator.Alpha {
-				alphaPatternStr := strings.Replace(alphaPattern, `"`, `\"`, -1)
+				alphaPatternStr := strings.Replace(alphaPattern, `\`, `\\`, -1) 
+				alphaPatternStr = strings.Replace(alphaPatternStr, `"`, `\"`, -1)
+
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", alphaPatternStr, "\"", `)`)
 			} else if validator.Beta != nil && *validator.Beta {
 				betaPatternStr := strings.Replace(betaPattern, `"`, `\"`, -1)
@@ -135,6 +137,7 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 		} else if fv.Beta != nil && *fv.Beta {
 			errorStr = "be a string conforming to beta regex " + betaPattern
 		}
+		errorStr = strings.Replace(errorStr, `\`, `\\`, -1)
 		errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
 		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf(this.`+fieldName+`+" `, errorStr, `")))`)
 		p.Out()
