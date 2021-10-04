@@ -12,7 +12,7 @@ import (
 	validator "github.com/maanasasubrahmanyam-sd/test"
 )
 
-const alphaPattern = "^[a-zA-Z[]-/_`'\" \\n\\r\\t&]+$"
+const alphaPattern = "^[a-zA-Z\\[\\]-/_`'\" \\n\\r\\t&]+$"
 const defaultPattern = "^[a-z']+$"
 const betaPattern = "^[a-zA-Z0-9]+$"
 
