@@ -18,8 +18,7 @@ func buildProto3(AlphaTrue, AlphaFalse, Noval string) *ValidatorMessage3 {
 
 func TestStringRegex(t *testing.T) {
 	var isTestCasePass = true
-	//^[a-zA-Z[]-/_`'\" \n\r\t&]
-	tooLong1Proto3 := buildProto3("hello'\"`\t\n\r 1&", "test123^^&*&(*", "test")
+	tooLong1Proto3 := buildProto3("h_-ello[]'\"`\t\n\r &", "test123^^&*&(*", "test")
 	if len(tooLong1Proto3.Secvalidator()) > 0 {
 		for _, err := range tooLong1Proto3.Secvalidator() {
 			fmt.Println(err)
