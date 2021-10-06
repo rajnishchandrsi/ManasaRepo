@@ -109,12 +109,14 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		variableName := "this." + fieldName
 
 		if fieldValidator == nil && !field.IsMessage() {
-			p.generateDefaultValidator(variableName, ccTypeName, fieldName)
+			fmt.Fprintln(os.Stderr, "cheking field ", field.IsString())
+			if field.IsString() {
+				p.generateDefaultValidator(variableName, ccTypeName, fieldName)
+			}
 			continue
 		}
 
 		if field.IsString() {
-			fmt.Fprintln(os.Stderr, variableName, ccTypeName, fieldName, fieldValidator)
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 
