@@ -5,7 +5,7 @@ syntax = "proto3";
 package validatortest;
 
 //import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/maanasasubrahmanyam-sd/test/secvalidator.proto";
+import "secvalidator.proto";
 
 
 message ValidatorMessage3 {
@@ -13,6 +13,8 @@ message ValidatorMessage3 {
 	//string SomeString = 1 [(validator.field) = {regex: "^.{2,5}$"}];
 	string alphaTrue = 1 [(secvalidator.field) = {alpha: true}];
 	string alphaFalse = 2 [(secvalidator.field) = {alpha: false}]; // no validation 
-    string noval = 3;
+	string beta = 3 [(secvalidator.field) = {beta: true}];
+    string noval = 4;
+	int32 age = 5;
 
 }
