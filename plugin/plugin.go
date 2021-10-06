@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
@@ -81,8 +79,10 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 				// no validation
 			}
 		} else {
-			fieldName := p.GetOneOfFieldName(message, field)
-			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPattern, "\"", `)`)
+			if field.IsString() {
+				fieldName := p.GetOneOfFieldName(message, field)
+				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPattern, "\"", `)`)
+			}
 		}
 	}
 }
@@ -109,7 +109,6 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		variableName := "this." + fieldName
 
 		if fieldValidator == nil && !field.IsMessage() {
-			fmt.Fprintln(os.Stderr, "cheking field ", field.IsString())
 			if field.IsString() {
 				p.generateDefaultValidator(variableName, ccTypeName, fieldName)
 			}
