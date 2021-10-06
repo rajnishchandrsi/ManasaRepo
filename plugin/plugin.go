@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
