@@ -81,7 +81,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 				// no validation
 			}
 		} else {
-			if field.IsString() {
+			if field.IsString() && field.Options == nil {
 				fmt.Fprintln(os.Stderr, "message field is ", field)
 				fieldName := p.GetOneOfFieldName(message, field)
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPattern, "\"", `)`)
