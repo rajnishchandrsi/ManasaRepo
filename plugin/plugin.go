@@ -137,7 +137,7 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 		}
 		errorStr = strings.Replace(errorStr, `\`, `\\`, -1)
 		errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
-		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf(this.`+fieldName+`+" `, errorStr, `")))`)
+		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v",this.`+fieldName+`+" `, errorStr, `")))`)
 		p.Out()
 		p.P(`}`)
 	}
@@ -148,7 +148,7 @@ func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string
 	p.In()
 	errorStr := "be a string conforming to default regex " + defaultPattern
 	errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
-	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf(this.`+fieldName+`+" `, errorStr, `")))`)
+	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v", this.`+fieldName+`+" `, errorStr, `")))`)
 	p.Out()
 	p.P(`}`)
 }
