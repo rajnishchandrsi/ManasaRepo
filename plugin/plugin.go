@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
@@ -80,6 +82,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 			}
 		} else {
 			if field.IsString() {
+				fmt.Fprintln(os.Stderr, "message field is ", field)
 				fieldName := p.GetOneOfFieldName(message, field)
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPattern, "\"", `)`)
 			}
@@ -114,11 +117,9 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			}
 			continue
 		}
-
 		if field.IsString() {
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
-
 	}
 	p.P(`return errorsList`)
 	p.Out()
