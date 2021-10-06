@@ -82,7 +82,6 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 			}
 		} else {
 			if field.IsString() && field.Options == nil {
-				fmt.Fprintln(os.Stderr, "message field is ", field)
 				fieldName := p.GetOneOfFieldName(message, field)
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPattern, "\"", `)`)
 			}
@@ -112,7 +111,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		variableName := "this." + fieldName
 
 		if fieldValidator == nil && !field.IsMessage() {
-			if field.IsString() {
+			if field.IsString() && field.Options == nil {
 				p.generateDefaultValidator(variableName, ccTypeName, fieldName)
 			}
 			continue
