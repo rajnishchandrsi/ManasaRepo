@@ -131,9 +131,9 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 		errorStr := ""
 
 		if fv.Alpha != nil && *fv.Alpha {
-			errorStr = "be a string conforming to alpha regex " + alphaPattern
+			errorStr = " \" allowed " + alphaPattern
 		} else if fv.Beta != nil && *fv.Beta {
-			errorStr = "be a string conforming to beta regex " + betaPattern
+			errorStr = " \\ allowed beta " + betaPattern
 		}
 		errorStr = strings.Replace(errorStr, `\`, `\\`, -1)
 		errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
