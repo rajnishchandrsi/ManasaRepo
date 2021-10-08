@@ -6,12 +6,15 @@ import (
 	"strconv"
 	"strings"
 
+	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	validator_plugin "github.com/maanasasubrahmanyam-sd/test/plugin"
 )
 
 func main() {
+	fmt.Fprintln(os.Stderr, "main starts")
 	gen := generator.New()
 
 	data, err := ioutil.ReadAll(os.Stdin)
@@ -46,6 +49,7 @@ func main() {
 	gen.WrapTypes()
 	gen.SetPackageNames()
 	gen.BuildTypeNameMap()
+	fmt.Fprintln(os.Stderr, "in main")
 	gen.GeneratePlugin(validator_plugin.NewPlugin(useGogoImport))
 
 	for i := 0; i < len(gen.Response.File); i++ {
