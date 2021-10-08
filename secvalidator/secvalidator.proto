@@ -3,7 +3,7 @@ package secvalidator;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/maanasasubrahmanyam-sd/test;secvalidator";
+option go_package = "github.com/maanasasubrahmanyam-sd/test/secvalidator;secvalidator";
 
 
 extend google.protobuf.FieldOptions {
