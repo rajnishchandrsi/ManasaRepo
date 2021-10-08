@@ -1,4 +1,4 @@
-module github.com/maanasasubrahmanyam-sd/test
+module github.com/maanasasubrahmanyam-sd/test/secvalidator
 
 go 1.16
 
