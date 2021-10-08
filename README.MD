@@ -38,13 +38,12 @@ protoc \
 --gogo_out=./gogo \
 --gogo_out=${GOPATH}/src \
 --gogo_opt=Mgogoproto/gogo.proto=github.com/gogo/protobuf@v1.3.2 \
---gogo_opt=Mgo-proto-validators/validator.proto=github.com/maanasasubrahmanyam-sd \
 --govalidators_out=./gogo \
 validator_proto3.proto
 
 protoc \
 --proto_path=. \
---proto_path=C:\\Users\\Rohit\\go\\src\\github.com\\maanasasubrahmanyam-sd\\test \
+--proto_path=C:\\Users\\Rohit\\go\\src\\github.com\\maanasasubrahmanyam-sd\\test\\secvalidator \
 --proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2/protobuf \
 --gogo_out=./gogo \
 --gogo_opt=Mgogoproto/gogo.proto=github.com/gogo/protobuf@v1.3.2 \
