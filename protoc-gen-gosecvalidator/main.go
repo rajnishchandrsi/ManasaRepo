@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	fmt.Fprintf(os.Stderr, "main starts Maanasa")
+	fmt.Fprintf(os.Stderr, "main starts sec validator")
 	gen := generator.New()
 
 	data, err := ioutil.ReadAll(os.Stdin)

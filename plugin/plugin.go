@@ -9,7 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	validator "github.com/maanasasubrahmanyam-sd/test"
+	validator "github.com/maanasasubrahmanyam-sd/test/secvalidator"
 )
 
 const alphaPattern = "^[a-zA-Z()\\[\\]\\-_`'\" \\n\\r\\t&]+$"
@@ -41,7 +41,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test")
+	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test/secvalidator")
 	fmt.Fprintln(os.Stderr, "imports", p)
 
 	for _, msg := range file.Messages() {
