@@ -43,10 +43,12 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.fmtPkg = p.NewImport("fmt")
 	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test")
 	fmt.Fprintln(os.Stderr, "imports", p)
+
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
 			continue
 		}
+		fmt.Fprintf(os.Stderr, "in plugin")
 		p.generateRegexVars(file, msg)
 		if gogoproto.IsProto3(file.FileDescriptorProto) {
 			p.generateProto3Message(file, msg)

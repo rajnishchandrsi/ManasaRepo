@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	fmt.Fprintln(os.Stderr, "main starts")
+	fmt.Fprintf(os.Stderr, "main starts Maanasa")
 	gen := generator.New()
 
 	data, err := ioutil.ReadAll(os.Stdin)
@@ -49,7 +49,7 @@ func main() {
 	gen.WrapTypes()
 	gen.SetPackageNames()
 	gen.BuildTypeNameMap()
-	fmt.Fprintln(os.Stderr, "in main")
+	fmt.Fprintln(os.Stderr, "in main calling plugin")
 	gen.GeneratePlugin(validator_plugin.NewPlugin(useGogoImport))
 
 	for i := 0; i < len(gen.Response.File); i++ {
