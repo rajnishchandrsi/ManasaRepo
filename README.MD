@@ -38,8 +38,9 @@ protoc \
 --gogo_out=./gogo \
 --gogo_out=${GOPATH}/src \
 --gogo_opt=Mgogoproto/gogo.proto=github.com/gogo/protobuf@v1.3.2 \
---govalidators_out=./gogo \
+--gosecvalidator_out=./gogo \
 validator_proto3.proto
+
 
 protoc \
 --proto_path=. \
@@ -47,5 +48,5 @@ protoc \
 --proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2/protobuf \
 --gogo_out=./gogo \
 --gogo_opt=Mgogoproto/gogo.proto=github.com/gogo/protobuf@v1.3.2 \
---govalidators_out=gogoimport=true:./ \
+--gosecvalidator_out=gogoimport=true:./ \
 validator_proto3.proto
