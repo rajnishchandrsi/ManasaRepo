@@ -3,8 +3,6 @@
 
 package secvalidator
 
-import "strings"
-
 // Validator is a general interface that allows a message to be validated.
 type Validator interface {
 	Validate() error
@@ -23,7 +21,7 @@ type fieldError struct {
 }
 
 func (f *fieldError) Error() string {
-	return "invalid field " + strings.Join(f.fieldStack, ".") + ": " + f.nestedErr.Error()
+	return "invalid" + f.nestedErr.Error()
 }
 
 // FieldError wraps a given Validator error providing a message call stack.
