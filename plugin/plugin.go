@@ -22,8 +22,11 @@ type plugin struct {
 	regexPkg      generator.Single
 	fmtPkg        generator.Single
 	validatorPkg  generator.Single
-	logPkg        generator.Single
 	osPkg         generator.Single
+	jsonPkg       generator.Single
+	zapPkg        generator.Single
+	flagPkg       generator.Single
+	stringsPkg     generator.Single
 	useGogoImport bool
 }
 
@@ -43,8 +46,11 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.logPkg = p.NewImport("log")
 	p.osPkg = p.NewImport("os")
+	p.flagPkg = p.NewImport("flag")
+	p.jsonPkg = p.NewImport("encoding/json")
+	p.zapPkg = p.NewImport("go.uber.org/zap")
+	p.stringsPkg = p.NewImport("strings")
 	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test/secvalidator")
 	p.P(`type ErrorList []error`)
 	p.logger()
@@ -61,7 +67,44 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 }
 
 func (p *plugin) logger() {
-	p.P(`var WarningLogger,InfoLogger,ErrorLogger *`, p.logPkg.Use(), `.Logger`)
+
+	p.P(`var logger *`, p.zapPkg.Use(), `.Logger`)
+	p.P(`func init() {`)
+	p.In()
+	p.P(`var fileName *string`)
+	p.P(`var debugLevel *string`)
+
+	p.P(`if `, p.flagPkg.Use(),`.Lookup("fileName") == nil {`)
+	p.In()
+	p.P(`fileName = `, p.flagPkg.Use(),`.String("fileName", "TestLogs" , "default message")`)
+	p.Out()
+	p.P(`}`)
+
+	p.P(`if `, p.flagPkg.Use(),`.Lookup("debugLevel") == nil {`)
+	p.In()
+	p.P(`debugLevel = `, p.flagPkg.Use(),`.String("debugLevel", "info" , "default message")`)
+	p.Out()
+	p.P(`}`)
+	p.P(p.flagPkg.Use(),`.Parse()`)
+
+	p.P("rawJSON := []byte(`{\"level\": \"`+ "+p.stringsPkg.Use()+".ToLower(*debugLevel)+`\",\"encoding\": \"json\",\"outputPaths\": [\"stdout\", \"`+*fileName+`\"],\"errorOutputPaths\": [\"stderr\"],\"encoderConfig\": {\"messageKey\": \"message\",\"levelKey\": \"level\", \"levelEncoder\": \"lowercase\"}}`)")
+	p.P(`var cfg `, p.zapPkg.Use(), `.Config`)
+	p.P(`var err error`)
+	p.P(`if err := `, p.jsonPkg.Use(), `.Unmarshal(rawJSON, &cfg); err != nil {`)
+	p.P(p.fmtPkg.Use(),`.Println("Only debug, info, error level can be set.")`)
+	p.P(`panic(err)`)
+	p.P(`}`)
+	p.P(`logger, err = cfg.Build()`)
+	p.P(`if err != nil {`)
+	p.In()
+	p.P(`panic(err)`)
+	p.Out()
+	p.P(`}`)
+	p.P(`defer logger.Sync()`)
+	p.Out()
+	p.P(`}`)
+
+	/* p.P(`var WarningLogger,InfoLogger,ErrorLogger *`, p.logPkg.Use(), `.Logger`)
 	p.P(`func init() {`)
 	p.In()
 	p.P(`file, err := `, p.osPkg.Use(), `.OpenFile("logs.txt",`, p.osPkg.Use(), `.O_APPEND|`, p.osPkg.Use(), `.O_CREATE|`, p.osPkg.Use(), `.O_WRONLY, 0666)`)
@@ -74,7 +117,7 @@ func (p *plugin) logger() {
 	p.P(`WarningLogger = `, p.logPkg.Use(), `.New(file, "WARNING: ", `, p.logPkg.Use(), `.Ldate|`, p.logPkg.Use(), `.Ltime|`, p.logPkg.Use(), `.Lshortfile)`)
 	p.P(`ErrorLogger = `, p.logPkg.Use(), `.New(file, "ERROR: ", `, p.logPkg.Use(), `.Ldate|`, p.logPkg.Use(), `.Ltime|`, p.logPkg.Use(), `.Lshortfile)`)
 	p.Out()
-	p.P(`}`)
+	p.P(`}`) */
 }
 
 func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
@@ -128,9 +171,8 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Secvalidator() ErrorList {`)
 	p.In()
-	p.P(`InfoLogger.Println("Starting the application...")`)
-	p.P(`WarningLogger.Println("warn the application...")`)
-	p.P(`ErrorLogger.Println("error the application...")`)
+	p.P(`logger.Info("info logger construction succeeded")`)
+	p.P(`logger.Debug("debug logger construction succeeded")`)
 	p.P(`var errorsList ErrorList`)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
