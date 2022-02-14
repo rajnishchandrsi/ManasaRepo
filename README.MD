@@ -29,7 +29,7 @@ protoc \
 --govalidators_out=./ \
 validator_proto3.proto
 
-
+working command 
 protoc \
 --proto_path=. \
 --proto_path=${GOPATH}/pkg/mod \

@@ -16,5 +16,6 @@ message ValidatorMessage3 {
 	string beta = 3 [(secvalidator.field) = {beta: true}];
     string noval = 4;
 	int32 age = 5;
+	repeated string name = 6 [(secvalidator.field) = {beta: true}];
 
 }

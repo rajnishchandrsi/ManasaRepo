@@ -26,7 +26,7 @@ type plugin struct {
 	jsonPkg       generator.Single
 	zapPkg        generator.Single
 	flagPkg       generator.Single
-	stringsPkg     generator.Single
+	stringsPkg    generator.Single
 	useGogoImport bool
 }
 
@@ -53,7 +53,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.stringsPkg = p.NewImport("strings")
 	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/test/secvalidator")
 	p.P(`type ErrorList []error`)
-	p.logger()
+	//p.logger()
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -74,24 +74,25 @@ func (p *plugin) logger() {
 	p.P(`var fileName *string`)
 	p.P(`var debugLevel *string`)
 
-	p.P(`if `, p.flagPkg.Use(),`.Lookup("fileName") == nil {`)
+	p.P(`if `, p.flagPkg.Use(), `.Lookup("fileName") == nil {`)
 	p.In()
-	p.P(`fileName = `, p.flagPkg.Use(),`.String("fileName", "TestLogs" , "default message")`)
+	p.P(`fileName = `, p.flagPkg.Use(), `.String("fileName", "TestLogs" , "default message")`)
 	p.Out()
 	p.P(`}`)
 
-	p.P(`if `, p.flagPkg.Use(),`.Lookup("debugLevel") == nil {`)
+	p.P(`if `, p.flagPkg.Use(), `.Lookup("debugLevel") == nil {`)
 	p.In()
-	p.P(`debugLevel = `, p.flagPkg.Use(),`.String("debugLevel", "info" , "default message")`)
+	p.P(`debugLevel = `, p.flagPkg.Use(), `.String("debugLevel", "info" , "default message")`)
 	p.Out()
 	p.P(`}`)
-	p.P(p.flagPkg.Use(),`.Parse()`)
 
-	p.P("rawJSON := []byte(`{\"level\": \"`+ "+p.stringsPkg.Use()+".ToLower(*debugLevel)+`\",\"encoding\": \"json\",\"outputPaths\": [\"stdout\", \"`+*fileName+`\"],\"errorOutputPaths\": [\"stderr\"],\"encoderConfig\": {\"messageKey\": \"message\",\"levelKey\": \"level\", \"levelEncoder\": \"lowercase\"}}`)")
+	p.P(p.flagPkg.Use(), `.Parse()`)
+
+	p.P("rawJSON := []byte(`{\"level\": \"`+ " + p.stringsPkg.Use() + ".ToLower(*debugLevel)+`\",\"encoding\": \"json\",\"outputPaths\": [\"stdout\", \"`+*fileName+`\"],\"errorOutputPaths\": [\"stderr\"],\"encoderConfig\": {\"messageKey\": \"message\",\"levelKey\": \"level\", \"levelEncoder\": \"lowercase\"}}`)")
 	p.P(`var cfg `, p.zapPkg.Use(), `.Config`)
 	p.P(`var err error`)
 	p.P(`if err := `, p.jsonPkg.Use(), `.Unmarshal(rawJSON, &cfg); err != nil {`)
-	p.P(p.fmtPkg.Use(),`.Println("Only debug, info, error level can be set.")`)
+	p.P(p.fmtPkg.Use(), `.Println("Only debug, info, error level can be set.")`)
 	p.P(`panic(err)`)
 	p.P(`}`)
 	p.P(`logger, err = cfg.Build()`)
@@ -104,20 +105,6 @@ func (p *plugin) logger() {
 	p.Out()
 	p.P(`}`)
 
-	/* p.P(`var WarningLogger,InfoLogger,ErrorLogger *`, p.logPkg.Use(), `.Logger`)
-	p.P(`func init() {`)
-	p.In()
-	p.P(`file, err := `, p.osPkg.Use(), `.OpenFile("logs.txt",`, p.osPkg.Use(), `.O_APPEND|`, p.osPkg.Use(), `.O_CREATE|`, p.osPkg.Use(), `.O_WRONLY, 0666)`)
-	p.P(`if err != nil {`)
-	p.In()
-	p.P(p.logPkg.Use(), `.Fatal(err)`)
-	p.Out()
-	p.P(`}`)
-	p.P(`InfoLogger = `, p.logPkg.Use(), `.New(file, "INFO: ", `, p.logPkg.Use(), `.Ldate|`, p.logPkg.Use(), `.Ltime|`, p.logPkg.Use(), `.Lshortfile)`)
-	p.P(`WarningLogger = `, p.logPkg.Use(), `.New(file, "WARNING: ", `, p.logPkg.Use(), `.Ldate|`, p.logPkg.Use(), `.Ltime|`, p.logPkg.Use(), `.Lshortfile)`)
-	p.P(`ErrorLogger = `, p.logPkg.Use(), `.New(file, "ERROR: ", `, p.logPkg.Use(), `.Ldate|`, p.logPkg.Use(), `.Ltime|`, p.logPkg.Use(), `.Lshortfile)`)
-	p.Out()
-	p.P(`}`) */
 }
 
 func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
@@ -176,8 +163,16 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`var errorsList ErrorList`)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
-		fieldName := p.GetOneOfFieldName(message, field)
+		fieldName := p.getOneOfFieldNameHelper(message, field)
 		variableName := "this." + fieldName
+		fmt.Fprintln(os.Stderr, "all fileds :", field)
+
+		repeated := field.IsRepeated()
+		if repeated {
+			//field this.Name ValidatorMessage3 Name beta:true message ValidatorMessage3 Name
+			fmt.Fprintln(os.Stderr, "Maanasa :", variableName, ccTypeName, fieldName, fieldValidator)
+			p.generateValidatorRepetaed(variableName, ccTypeName, fieldName, fieldValidator)
+		}
 
 		if fieldValidator == nil && !field.IsMessage() {
 			if field.IsString() && field.Options == nil {
@@ -188,14 +183,59 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		if field.IsString() {
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
+
 	}
 	p.P(`return errorsList`)
 	p.Out()
 	p.P(`}`)
 }
 
-//code
+//code this.Name ValidatorMessage3 Name beta:true message ValidatorMessage3 Name
+
+func (p *plugin) generateValidatorRepetaed(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	p.P(`for _, val := range `, variableName, `{`)
+	if (fv.Alpha != nil && *fv.Alpha) || (fv.Beta != nil && *fv.Beta) {
+		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(val) {`)
+		p.In()
+		errorStr := ""
+
+		fmt.Fprintln(os.Stderr, "message", ccTypeName, fieldName)
+		if fv.Alpha != nil && *fv.Alpha {
+			p.P(`alPattern := "[a-zA-Z]"`)
+			p.P(`reg := regexp.MustCompile(alPattern)`)
+			p.P(`res := reg.ReplaceAllString(val,"")`)
+			errorStr = " \" allowed " + alphaPattern
+		} else if fv.Beta != nil && *fv.Beta {
+			p.P(`btPattern := "[a-zA-Z0-9]"`)
+			p.P(`reg := regexp.MustCompile(btPattern)`)
+			p.P(`res := reg.ReplaceAllString(val,"")`)
+			errorStr = " \\ allowed beta " + betaPattern
+		}
+		errorStr = strings.Replace(errorStr, `\`, `\\`, -1)
+		errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
+		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v"," `, ccTypeName+"."+fieldName+": "+errorStr, `" +res)))`)
+		p.Out()
+		p.P(`}`)
+		p.P(`}`)
+
+	}
+}
+
+func (p *plugin) generateDefaultValidatorForRepeated(variableName string, ccTypeName string, fieldName string) {
+	p.P(`for _, val := range `, variableName, `{`)
+	p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
+	p.In()
+	errorStr := "be a string conforming to default regex " + defaultPattern
+	errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
+	p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v"," `, ccTypeName+"."+fieldName+": "+errorStr, `")))`)
+	p.Out()
+	p.P(`}`)
+	p.P(`}`)
+
+}
+
 func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+
 	if (fv.Alpha != nil && *fv.Alpha) || (fv.Beta != nil && *fv.Beta) {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
@@ -203,13 +243,19 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 
 		fmt.Fprintln(os.Stderr, "message", ccTypeName, fieldName)
 		if fv.Alpha != nil && *fv.Alpha {
+			p.P(`alPattern := "[a-zA-Z]"`)
+			p.P(`reg := regexp.MustCompile(alPattern)`)
+			p.P(`res := reg.ReplaceAllString(`, variableName, `,"")`)
 			errorStr = " \" allowed " + alphaPattern
 		} else if fv.Beta != nil && *fv.Beta {
+			p.P(`btPattern := "[a-zA-Z0-9]"`)
+			p.P(`reg := regexp.MustCompile(btPattern)`)
+			p.P(`res := reg.ReplaceAllString(`, variableName, `,"")`)
 			errorStr = " \\ allowed beta " + betaPattern
 		}
 		errorStr = strings.Replace(errorStr, `\`, `\\`, -1)
 		errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
-		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v"," `, ccTypeName+"."+fieldName+": "+errorStr, `")))`)
+		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v"," `, ccTypeName+"."+fieldName+": "+errorStr, `" +res)))`)
 		p.Out()
 		p.P(`}`)
 	}
