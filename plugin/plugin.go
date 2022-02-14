@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
@@ -43,6 +44,8 @@ func (p *plugin) Init(g *generator.Generator) {
 }
 
 func (p *plugin) Generate(file *generator.FileDescriptor) {
+	//fmt.Fprintln(os.Stderr, "file :", file)
+
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
@@ -163,14 +166,26 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`var errorsList ErrorList`)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
-		fieldName := p.getOneOfFieldNameHelper(message, field)
+		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
-		fmt.Fprintln(os.Stderr, "all fileds :", field)
+		//fmt.Fprintln(os.Stderr, "all fileds :", field)
 
 		repeated := field.IsRepeated()
 		if repeated {
+
+			//p.generateRepeatedCountValidator(variableName, ccTypeName, fieldName, fieldValidator)
+			/* if p.validatorWithNonRepeatedConstraint(fieldValidator) {
+				p.P(`for _, item := range `, variableName, `{`)
+				p.In()
+				vn := "item"
+				fmt.Fprintln(os.Stderr, "item :", vn)
+				p.Out()
+				p.P(`}`)
+			} */
+			//v := []string{variableName}
+			//var `this.`+ fieldName []string
 			//field this.Name ValidatorMessage3 Name beta:true message ValidatorMessage3 Name
-			fmt.Fprintln(os.Stderr, "Maanasa :", variableName, ccTypeName, fieldName, fieldValidator)
+			//fmt.Fprintln(os.Stderr, "Maanasa :", variableName, ccTypeName, fieldName, fieldValidator)
 			p.generateValidatorRepetaed(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 
@@ -180,7 +195,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			}
 			continue
 		}
-		if field.IsString() {
+		if field.IsString() && !repeated{
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 
@@ -193,7 +208,10 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 //code this.Name ValidatorMessage3 Name beta:true message ValidatorMessage3 Name
 
 func (p *plugin) generateValidatorRepetaed(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	p.P(`for _, val := range `, variableName, `{`)
+	v := reflect.ValueOf(*fv)
+	//for i := 0; i < v.NumField(); i++ {
+	//reflect.ValueOf(*fv).Type().Name()
+	p.P(`for _, val := range `, v.NumField(), `{`)
 	if (fv.Alpha != nil && *fv.Alpha) || (fv.Beta != nil && *fv.Beta) {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(val) {`)
 		p.In()
@@ -273,4 +291,31 @@ func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string
 
 func (p *plugin) regexName(ccTypeName string, fieldName string) string {
 	return "_regex_" + ccTypeName + "_" + fieldName
+}
+
+func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator) bool /*, int)*/ {
+	if fv == nil {
+		return false
+	}
+
+	// Need to use reflection in order to be future-proof for new types of constraints.
+	v := reflect.ValueOf(*fv)
+	fmt.Fprintln(os.Stderr, "no of times :", v.NumField())
+	for i := 0; i < v.NumField(); i++ {
+		fieldName := v.Type().Field(i).Name
+		fmt.Fprintln(os.Stderr, "Names :", v.Type().Field(i).Name)
+
+		// All known validators will have a pointer type and we should skip any fields
+		// that are not pointers (i.e unknown fields, etc) as well as 'nil' pointers that
+		// don't lead to anything.
+		if v.Type().Field(i).Type.Kind() != reflect.Ptr || v.Field(i).IsNil() {
+			continue
+		}
+
+		// Identify non-repeated constraints based on their name.
+		if fieldName != "RepeatedCountMin" && fieldName != "RepeatedCountMax" {
+			return true
+		}
+	}
+	return false
 }
