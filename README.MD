@@ -29,7 +29,7 @@ protoc \
 --govalidators_out=./ \
 validator_proto3.proto
 
-working command 
+working command proto give complete path of secvalidate.proto
 protoc \
 --proto_path=. \
 --proto_path=${GOPATH}/pkg/mod \
@@ -42,11 +42,14 @@ protoc \
 validator_proto3.proto
 
 
+// working command in proto keep secvalidat.proto 
 protoc \
 --proto_path=. \
 --proto_path=C:\\Users\\Rohit\\go\\src\\github.com\\maanasasubrahmanyam-sd\\test\\secvalidator \
 --proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2/protobuf \
---gogo_out=./gogo \
+--gogo_out=./ \
 --gogo_opt=Mgogoproto/gogo.proto=github.com/gogo/protobuf@v1.3.2 \
 --gosecvalidator_out=gogoimport=true:./ \
-validator_proto3.proto
+*.proto
+
+$ go install protoc-gen-gosecvalidator.go

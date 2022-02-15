@@ -44,8 +44,6 @@ func (p *plugin) Init(g *generator.Generator) {
 }
 
 func (p *plugin) Generate(file *generator.FileDescriptor) {
-	//fmt.Fprintln(os.Stderr, "file :", file)
-
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
@@ -168,34 +166,20 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		fieldValidator := getFieldValidatorIfAny(field)
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
-		//fmt.Fprintln(os.Stderr, "all fileds :", field)
+		fmt.Fprintln(os.Stderr, "maanasa :", field)
 
 		repeated := field.IsRepeated()
 		if repeated {
-
-			//p.generateRepeatedCountValidator(variableName, ccTypeName, fieldName, fieldValidator)
-			/* if p.validatorWithNonRepeatedConstraint(fieldValidator) {
-				p.P(`for _, item := range `, variableName, `{`)
-				p.In()
-				vn := "item"
-				fmt.Fprintln(os.Stderr, "item :", vn)
-				p.Out()
-				p.P(`}`)
-			} */
-			//v := []string{variableName}
-			//var `this.`+ fieldName []string
-			//field this.Name ValidatorMessage3 Name beta:true message ValidatorMessage3 Name
-			//fmt.Fprintln(os.Stderr, "Maanasa :", variableName, ccTypeName, fieldName, fieldValidator)
 			p.generateValidatorRepetaed(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 
 		if fieldValidator == nil && !field.IsMessage() {
-			if field.IsString() && field.Options == nil {
+			if field.IsString() && field.Options == nil && !repeated {
 				p.generateDefaultValidator(variableName, ccTypeName, fieldName)
 			}
 			continue
 		}
-		if field.IsString() && !repeated{
+		if field.IsString() && !repeated {
 			p.generateSecValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		}
 
@@ -208,34 +192,46 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 //code this.Name ValidatorMessage3 Name beta:true message ValidatorMessage3 Name
 
 func (p *plugin) generateValidatorRepetaed(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	v := reflect.ValueOf(*fv)
-	//for i := 0; i < v.NumField(); i++ {
-	//reflect.ValueOf(*fv).Type().Name()
-	p.P(`for _, val := range `, v.NumField(), `{`)
-	if (fv.Alpha != nil && *fv.Alpha) || (fv.Beta != nil && *fv.Beta) {
-		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(val) {`)
+	fmt.Fprintln(os.Stderr, " inside rep :", variableName)
+	if fv == nil {
+		p.P(`for _, val := range `, variableName, `{`)
 		p.In()
 		errorStr := ""
-
-		fmt.Fprintln(os.Stderr, "message", ccTypeName, fieldName)
-		if fv.Alpha != nil && *fv.Alpha {
-			p.P(`alPattern := "[a-zA-Z]"`)
-			p.P(`reg := regexp.MustCompile(alPattern)`)
-			p.P(`res := reg.ReplaceAllString(val,"")`)
-			errorStr = " \" allowed " + alphaPattern
-		} else if fv.Beta != nil && *fv.Beta {
-			p.P(`btPattern := "[a-zA-Z0-9]"`)
-			p.P(`reg := regexp.MustCompile(btPattern)`)
-			p.P(`res := reg.ReplaceAllString(val,"")`)
-			errorStr = " \\ allowed beta " + betaPattern
-		}
+		// default code
+		p.P(`defaultPattern := "[a-z']"`)
+		p.P(`reg := regexp.MustCompile(defaultPattern)`)
+		p.P(`res := reg.ReplaceAllString(val,"")`)
+		errorStr = " \\ allowed default " + defaultPattern
 		errorStr = strings.Replace(errorStr, `\`, `\\`, -1)
 		errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
 		p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v"," `, ccTypeName+"."+fieldName+": "+errorStr, `" +res)))`)
 		p.Out()
 		p.P(`}`)
-		p.P(`}`)
+	} else {
+		p.P(`for _, val := range `, variableName, `{`)
+		if (fv.Alpha != nil && *fv.Alpha) || (fv.Beta != nil && *fv.Beta) {
+			p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(val) {`)
+			p.In()
+			errorStr := ""
 
+			if fv.Alpha != nil && *fv.Alpha {
+				p.P(`alPattern := "[a-zA-Z]"`)
+				p.P(`reg := regexp.MustCompile(alPattern)`)
+				p.P(`res := reg.ReplaceAllString(val,"")`)
+				errorStr = " \" allowed " + alphaPattern
+			} else if fv.Beta != nil && *fv.Beta {
+				p.P(`btPattern := "[a-zA-Z0-9]"`)
+				p.P(`reg := regexp.MustCompile(btPattern)`)
+				p.P(`res := reg.ReplaceAllString(val,"")`)
+				errorStr = " \\ allowed beta " + betaPattern
+			}
+			errorStr = strings.Replace(errorStr, `\`, `\\`, -1)
+			errorStr = strings.Replace(errorStr, `"`, `\"`, -1)
+			p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("%v"," `, ccTypeName+"."+fieldName+": "+errorStr, `" +res)))`)
+			p.Out()
+			p.P(`}`)
+			p.P(`}`)
+		}
 	}
 }
 
@@ -259,7 +255,6 @@ func (p *plugin) generateSecValidator(variableName string, ccTypeName string, fi
 		p.In()
 		errorStr := ""
 
-		fmt.Fprintln(os.Stderr, "message", ccTypeName, fieldName)
 		if fv.Alpha != nil && *fv.Alpha {
 			p.P(`alPattern := "[a-zA-Z]"`)
 			p.P(`reg := regexp.MustCompile(alPattern)`)
