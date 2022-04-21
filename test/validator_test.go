@@ -45,16 +45,17 @@ func TestStringRegex(t *testing.T) {
 
 }
 
-func buildProto3NestedInner(Inn string) *InnerMessage {
+func buildProto3NestedInner(Inn string, Name string) *InnerMessage {
 	goodProto3 := &InnerMessage{
-		Inn:Inn,
+		Inn: Inn,
+		Name : Name,
 	}
 	return goodProto3
 }
 
-func buildProto3NestedOuter(Name string,Address *InnerMessage ) *OuterMessage {
+func buildProto3NestedOuter(Name string, Address *InnerMessage) *OuterMessage {
 	goodProto3 := &OuterMessage{
-		Name:Name,
+		Name:    Name,
 		Address: Address,
 	}
 	return goodProto3
@@ -63,8 +64,8 @@ func buildProto3NestedOuter(Name string,Address *InnerMessage ) *OuterMessage {
 func TestNested(t *testing.T) {
 	var isTestCasePass = true
 
-	inner := buildProto3NestedInner("inner")
-	outer := buildProto3NestedOuter("name",inner)
+	inner := buildProto3NestedInner("inner123", "name12")
+	outer := buildProto3NestedOuter("name", inner)
 	if len(outer.Secvalidator()) > 0 {
 		for _, err := range outer.Secvalidator() {
 			fmt.Println(err)
@@ -77,5 +78,3 @@ func TestNested(t *testing.T) {
 	}
 
 }
-
-

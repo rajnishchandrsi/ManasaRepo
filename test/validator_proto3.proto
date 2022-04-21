@@ -27,4 +27,10 @@ message OuterMessage{
 
 message InnerMessage{
 	string inn = 1 [(secvalidator.field) = {alpha: true}];
+	string name = 2 [(secvalidator.field) = {alpha: true}];
+	NestedOne one = 3 [(secvalidator.field) = {msgExists: true}];
+}
+
+message NestedOne{
+	string id = 1;
 }
