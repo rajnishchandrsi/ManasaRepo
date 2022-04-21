@@ -15,8 +15,16 @@ message ValidatorMessage3 {
 	string alphaFalse = 2 [(secvalidator.field) = {alpha: false}]; // no validation 
 	string beta = 3 [(secvalidator.field) = {beta: true}];
     string noval = 4;
-	int32 age = 5;
 	repeated string name = 6 [(secvalidator.field) = {beta: true}];
 	repeated string country = 7 ;
 
+}
+
+message OuterMessage{
+	string name = 1;
+	InnerMessage address = 2 [(secvalidator.field) = {msgExists: true}];
+}
+
+message InnerMessage{
+	string inn = 1 [(secvalidator.field) = {alpha: true}];
 }

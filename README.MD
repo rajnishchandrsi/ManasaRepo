@@ -47,9 +47,11 @@ protoc \
 --proto_path=. \
 --proto_path=C:\\Users\\Rohit\\go\\src\\github.com\\maanasasubrahmanyam-sd\\test\\secvalidator \
 --proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2/protobuf \
+-I ${GOPATH}/src/github.com/envoyproxy/protoc-gen-validate \
 --gogo_out=./ \
 --gogo_opt=Mgogoproto/gogo.proto=github.com/gogo/protobuf@v1.3.2 \
 --gosecvalidator_out=gogoimport=true:./ \
+--validate_out="lang=go:./" \
 *.proto
 
 $ go install protoc-gen-gosecvalidator.go

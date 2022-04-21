@@ -44,3 +44,38 @@ func TestStringRegex(t *testing.T) {
 	}
 
 }
+
+func buildProto3NestedInner(Inn string) *InnerMessage {
+	goodProto3 := &InnerMessage{
+		Inn:Inn,
+	}
+	return goodProto3
+}
+
+func buildProto3NestedOuter(Name string,Address *InnerMessage ) *OuterMessage {
+	goodProto3 := &OuterMessage{
+		Name:Name,
+		Address: Address,
+	}
+	return goodProto3
+}
+
+func TestNested(t *testing.T) {
+	var isTestCasePass = true
+
+	inner := buildProto3NestedInner("inner")
+	outer := buildProto3NestedOuter("name",inner)
+	if len(outer.Secvalidator()) > 0 {
+		for _, err := range outer.Secvalidator() {
+			fmt.Println(err)
+		}
+		isTestCasePass = false
+	}
+
+	if !isTestCasePass {
+		t.Fatalf("expected fail in validator, but it didn't happen")
+	}
+
+}
+
+

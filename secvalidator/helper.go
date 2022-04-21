@@ -3,15 +3,20 @@
 
 package secvalidator
 
+import "fmt" 
+
 // Validator is a general interface that allows a message to be validated.
 type Validator interface {
 	Validate() error
 }
 
 func CallValidatorIfExists(candidate interface{}) error {
+	fmt.Println("helper")
 	if validator, ok := candidate.(Validator); ok {
+		fmt.Println("con met")
 		return validator.Validate()
 	}
+	fmt.Println("con not met")
 	return nil
 }
 

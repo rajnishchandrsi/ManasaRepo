@@ -3,7 +3,7 @@ package plugin
 import (
 	"fmt"
 	"os"
-	"reflect"
+	//"reflect"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
@@ -13,9 +13,9 @@ import (
 	validator "github.com/maanasasubrahmanyam-sd/test/secvalidator"
 )
 
-const alphaPattern = "^[a-zA-Z()\\[\\]\\-_`'\" \\n\\r\\t&]+$"
-const defaultPattern = "^[a-z']+$"
-const betaPattern = "^[a-zA-Z0-9\\[\\]]+$"
+const alphaPattern = "[a-zA-Z()\\[\\]\\-\\/&\"]"
+const defaultPattern = "[a-z']"
+const betaPattern = "[a-zA-Z0-9\\[\\]]"
 
 type plugin struct {
 	*generator.Generator
@@ -108,6 +108,10 @@ func (p *plugin) logger() {
 
 }
 
+func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {
+	return fv != nil && fv.MsgExists != nil && *(fv.MsgExists)
+}
+
 func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
 	if field.Options != nil {
 		v, err := proto.GetExtension(field.Options, validator.E_Field)
@@ -128,7 +132,8 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 				alphaPatternStr := strings.Replace(alphaPattern, `\`, `\\`, -1)
 				alphaPatternStr = strings.Replace(alphaPatternStr, `"`, `\"`, -1)
 
-				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", alphaPatternStr, "\"", `)`)
+				p.P(`var alphaPattern = "`, alphaPatternStr,`"`)
+				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile("^"+alphaPattern+"+$")`)
 			} else if validator.Beta != nil && *validator.Beta {
 				betaPatternStr := strings.Replace(betaPattern, `\`, `\\`, -1)
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", betaPatternStr, "\"", `)`)
@@ -136,7 +141,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 				// no validation
 			}
 		} else {
-			if field.IsString() && field.Options == nil {
+			if field.IsString() {
 				fieldName := p.GetOneOfFieldName(message, field)
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "\"", defaultPattern, "\"", `)`)
 			}
@@ -159,24 +164,59 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Secvalidator() ErrorList {`)
 	p.In()
-	p.P(`logger.Info("info logger construction succeeded")`)
-	p.P(`logger.Debug("debug logger construction succeeded")`)
+	//p.P(`logger.Info("info logger construction succeeded")`)
+	//p.P(`logger.Debug("debug logger construction succeeded")`)
 	p.P(`var errorsList ErrorList`)
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
-		fmt.Fprintln(os.Stderr, "all fields :", field)
-		if !field.IsString() {
-			continue
-		}
+		//fmt.Fprintln(os.Stderr, "all fields :", field)
+		repeated := field.IsRepeated()
+		nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage() && !(p.useGogoImport && gogoproto.IsEmbed(field))
+		
+		//if !field.IsString() {
+		//	continue
+		//}
 		if field.IsRepeated() {
 			p.P(`for _, val := range `, variableName, `{`)
 			p.In()
 			p.generateValidator(variableName, ccTypeName, fieldName, fieldValidator, true)
 			p.Out()
 			p.P(`}`)
-		} else {
+		} else if field.IsMessage() {
+			if p.validatorWithMessageExists(fieldValidator) {
+				if nullable && !repeated {
+					p.P(`if nil == `, variableName, `{`)
+					p.In()
+					p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist")))`)
+					p.Out()
+					p.P(`}`)
+				} else if repeated {
+					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is repeated, validator.msg_exists has no effect\n", ccTypeName, fieldName)
+				} 
+			}
+			if nullable && fieldValidator != nil && field.Options != nil{
+				p.P(`if `, variableName, ` != nil {`)
+				p.In()
+				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
+				p.In()
+				p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err))`)
+				p.Out()
+				p.P(`}`)
+				p.Out()
+				p.P(`}`)
+			
+			} else {
+				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
+				variableName = "&(" + variableName + ")"
+				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
+				p.In()
+				p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
+				p.Out()
+				p.P(`}`)
+			}		
+		}else {
 			p.generateValidator(variableName, ccTypeName, fieldName, fieldValidator, false)
 		}
 	}
@@ -197,6 +237,9 @@ func (p *plugin) replaceStr(isRepeated bool, variableName string){
 	} else {
 		p.P(`res := reg.ReplaceAllString(`, variableName, `,"")`)
 	}
+
+
+
 }
 func (p *plugin) generateValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator, isRepeated bool) {
 	errorStr := ""
@@ -217,8 +260,8 @@ func (p *plugin) generateValidator(variableName string, ccTypeName string, field
 			p.regName(isRepeated, ccTypeName, fieldName, variableName)
 			p.In()
 			if fv.Alpha != nil && *fv.Alpha {
-				p.P(`alPattern := "[a-zA-Z]"`)
-				p.P(`reg := regexp.MustCompile(alPattern)`)
+				//p.P(`alPattern := "[a-zA-Z]"`)
+				p.P(`reg := regexp.MustCompile(alphaPattern)`)
 				p.replaceStr(isRepeated, variableName)
 				errorStr = " \" allowed " + alphaPattern
 			} else if fv.Beta != nil && *fv.Beta {
@@ -249,31 +292,4 @@ func (p *plugin) generateDefaultValidator(variableName string, ccTypeName string
 
 func (p *plugin) regexName(ccTypeName string, fieldName string) string {
 	return "_regex_" + ccTypeName + "_" + fieldName
-}
-
-func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator) bool /*, int)*/ {
-	if fv == nil {
-		return false
-	}
-
-	// Need to use reflection in order to be future-proof for new types of constraints.
-	v := reflect.ValueOf(*fv)
-	fmt.Fprintln(os.Stderr, "no of times :", v.NumField())
-	for i := 0; i < v.NumField(); i++ {
-		fieldName := v.Type().Field(i).Name
-		fmt.Fprintln(os.Stderr, "Names :", v.Type().Field(i).Name)
-
-		// All known validators will have a pointer type and we should skip any fields
-		// that are not pointers (i.e unknown fields, etc) as well as 'nil' pointers that
-		// don't lead to anything.
-		if v.Type().Field(i).Type.Kind() != reflect.Ptr || v.Field(i).IsNil() {
-			continue
-		}
-
-		// Identify non-repeated constraints based on their name.
-		if fieldName != "RepeatedCountMin" && fieldName != "RepeatedCountMax" {
-			return true
-		}
-	}
-	return false
 }
