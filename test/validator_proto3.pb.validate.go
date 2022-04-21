@@ -189,6 +189,7 @@ var _ interface {
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
 func (m *InnerMessage) Validate() error {
+	fmt.Println("1")
 	if m == nil {
 		return nil
 	}
