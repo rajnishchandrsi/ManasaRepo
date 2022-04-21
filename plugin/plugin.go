@@ -199,9 +199,20 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			if nullable && fieldValidator != nil && field.Options != nil{
 				p.P(`if `, variableName, ` != nil {`)
 				p.In()
-				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
+				/* if this.Address != nil {
+					errorsListNew := this.Address.Secvalidator()
+					if errorsListNew != nil {
+						for i, _ := range errorsListNew{
+							errorsList = append(errorsList, errorsListNew[i])
+						}
+					}
+				} */
+				p.P(`errorsListNew := `, variableName,`.Secvalidator()`)
+				p.P(`if errorsListNew !=nil {`)
 				p.In()
-				p.P(`errorsList = append(errorsList,`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err))`)
+				p.P(`for i, _ := range errorsListNew{`)
+				p.P(`errorsList = append(errorsList, errorsListNew[i])`)
+				p.P(`}`)
 				p.Out()
 				p.P(`}`)
 				p.Out()
