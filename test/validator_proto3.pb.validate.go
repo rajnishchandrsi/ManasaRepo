@@ -49,6 +49,10 @@ func (m *ValidatorMessage3) Validate() error {
 
 	// no validation rules for Noval
 
+	// no validation rules for Name
+
+	// no validation rules for Country
+
 	return nil
 }
 
@@ -118,14 +122,19 @@ func (m *OuterMessage) Validate() error {
 
 	// no validation rules for Name
 
-	if v, ok := interface{}(m.GetAddress()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return OuterMessageValidationError{
-				field:  "Address",
-				reason: "embedded message failed validation",
-				cause:  err,
+	for idx, item := range m.GetAddress() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return OuterMessageValidationError{
+					field:  fmt.Sprintf("Address[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
 			}
 		}
+
 	}
 
 	return nil
@@ -197,16 +206,6 @@ func (m *InnerMessage) Validate() error {
 
 	// no validation rules for Name
 
-	if v, ok := interface{}(m.GetOne()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return InnerMessageValidationError{
-				field:  "One",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -264,21 +263,31 @@ var _ interface {
 	ErrorName() string
 } = InnerMessageValidationError{}
 
-// Validate checks the field values on NestedOne with the rules defined in the
+// Validate checks the field values on Status with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
-func (m *NestedOne) Validate() error {
+func (m *Status) Validate() error {
 	if m == nil {
 		return nil
 	}
 
-	// no validation rules for Id
+	// no validation rules for Type
+
+	if v, ok := interface{}(m.GetDetails()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return StatusValidationError{
+				field:  "Details",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
 
-// NestedOneValidationError is the validation error returned by
-// NestedOne.Validate if the designated constraints aren't met.
-type NestedOneValidationError struct {
+// StatusValidationError is the validation error returned by Status.Validate if
+// the designated constraints aren't met.
+type StatusValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -286,22 +295,22 @@ type NestedOneValidationError struct {
 }
 
 // Field function returns field value.
-func (e NestedOneValidationError) Field() string { return e.field }
+func (e StatusValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e NestedOneValidationError) Reason() string { return e.reason }
+func (e StatusValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e NestedOneValidationError) Cause() error { return e.cause }
+func (e StatusValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e NestedOneValidationError) Key() bool { return e.key }
+func (e StatusValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e NestedOneValidationError) ErrorName() string { return "NestedOneValidationError" }
+func (e StatusValidationError) ErrorName() string { return "StatusValidationError" }
 
 // Error satisfies the builtin error interface
-func (e NestedOneValidationError) Error() string {
+func (e StatusValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -313,14 +322,14 @@ func (e NestedOneValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sNestedOne.%s: %s%s",
+		"invalid %sStatus.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = NestedOneValidationError{}
+var _ error = StatusValidationError{}
 
 var _ interface {
 	Field() string
@@ -328,4 +337,73 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = NestedOneValidationError{}
+} = StatusValidationError{}
+
+// Validate checks the field values on Status_Detail with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *Status_Detail) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for A
+
+	// no validation rules for Type
+
+	return nil
+}
+
+// Status_DetailValidationError is the validation error returned by
+// Status_Detail.Validate if the designated constraints aren't met.
+type Status_DetailValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e Status_DetailValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e Status_DetailValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e Status_DetailValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e Status_DetailValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e Status_DetailValidationError) ErrorName() string { return "Status_DetailValidationError" }
+
+// Error satisfies the builtin error interface
+func (e Status_DetailValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sStatus_Detail.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = Status_DetailValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = Status_DetailValidationError{}

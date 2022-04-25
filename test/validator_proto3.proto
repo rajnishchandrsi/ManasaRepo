@@ -15,22 +15,31 @@ message ValidatorMessage3 {
 	string alphaFalse = 2 [(secvalidator.field) = {alpha: false}]; // no validation 
 	string beta = 3 [(secvalidator.field) = {beta: true}];
     string noval = 4;
-	repeated string name = 6 [(secvalidator.field) = {beta: true}];
-	repeated string country = 7 ;
+	string name = 6 [(secvalidator.field) = {beta: true}];
+	string country = 7 ;
 
 }
 
 message OuterMessage{
 	string name = 1;
-	InnerMessage address = 2 [(secvalidator.field) = {msgExists: true}];
+	repeated InnerMessage address = 2 ;
 }
 
 message InnerMessage{
-	string inn = 1 [(secvalidator.field) = {alpha: true}];
-	string name = 2 [(secvalidator.field) = {alpha: true}];
-	NestedOne one = 3 [(secvalidator.field) = {msgExists: true}];
+	string inn = 1  [(secvalidator.field) = {alpha: true}];
+	string name = 2 ;
 }
 
-message NestedOne{
-	string id = 1;
+message Status{
+	enum Type{
+		SUCCESS =0;
+		FAIL = 1;
+		PASS =2 ;
+	}
+	message Detail{
+		string a= 1 [(secvalidator.field) = {alpha: true}];
+		Type type = 2;
+	}
+	Type type = 1;
+	Detail details = 2 ;
 }
